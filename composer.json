@@ -17,7 +17,8 @@
         "drupal/recaptcha": "^2.4",
         "drupal/token": "^1.5",
         "drupal/webform": "^5.1",
-        "drupal/bootstrap4": "^1.0@beta"
+        "drupal/bootstrap4": "^1.0@beta",
+        "drupal/feeds": "^3.0@alpha"
     },
     "replace": {
         "drupal/core": "^8.6"
