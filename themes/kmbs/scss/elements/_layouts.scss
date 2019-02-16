@@ -1,0 +1,21 @@
+body {
+  main {
+    background-color: #272846; //TODO: make variable
+  }
+  .container {
+    width: 100%;
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+  .row {
+    margin-left: -30px;
+    margin-right: -30px;
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+  h1.page-header {
+    margin-top: 40px;
+    border-bottom: none;
+    color: #8a92ad; // TODO: make color variable
+  }
+}
