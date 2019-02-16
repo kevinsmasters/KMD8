@@ -42,3 +42,7 @@ sites/simpletest
 
 # Ignore SimpleTest multi-site environment.
 # simpletest
+
+# Ignore Theme node modules folder and sass cache things
+/themes/kmbs/.sass-cache/
+/themes/kmbs/node_modules/
