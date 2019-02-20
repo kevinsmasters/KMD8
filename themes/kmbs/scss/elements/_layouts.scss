@@ -1,6 +1,20 @@
 body {
   main {
-    background-color: #272846; //TODO: make variable
+    background-color: $navy; //TODO: make variable
+    header#page-header {
+      border-bottom: 10px solid $black;
+      background: url(../images/tikiface.jpg) left no-repeat;
+      .site-slogan {
+        text-align: left;
+        padding-left: 0;
+        margin: 0;
+        padding: 12% 0 0 219px;
+        font-size: 49px;
+        line-height: 42px;
+        color: $silver;
+        font-family: $courierNew;
+      }
+    }
   }
   .container {
     width: 100%;
