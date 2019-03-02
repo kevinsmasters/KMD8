@@ -1,0 +1,23 @@
+#block-webform {
+  form {
+    max-width: 900px;
+  }
+  label {
+    margin-top: 0;
+  }
+  .form-control {
+    color: $gray;
+    background-color: $ltblue;
+  }
+  .form-required:after {
+    background-image: none;
+    content: "*";
+  }
+  .btn-primary {
+    background-color: $gray;
+    border-color: $gray;
+  }
+  .form-item {
+    display: none;
+  }
+}

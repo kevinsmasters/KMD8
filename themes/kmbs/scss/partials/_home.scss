@@ -13,7 +13,7 @@
   h1.page-title {
     display: none;
   }
-  .container-fluid > .row {
+  .container-fluid > .row.mooned {
     background: url(../images/moon-palm2.jpg) no-repeat 102% top;
     transition: 1.25s;
   }

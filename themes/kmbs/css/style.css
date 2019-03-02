@@ -24,8 +24,8 @@ body {
     margin-top: 40px;
     border-bottom: none;
     color: #8a92ad; }
-  body .views-element-container > h2 {
-    font-size: 3.5rem;
+  body h2 {
+    font-size: 2.2rem;
     color: #8a92ad;
     margin-bottom: 20px;
     margin-top: 30px; }
@@ -54,9 +54,30 @@ body {
 .path-frontpage h1.page-title {
   display: none; }
 
-.path-frontpage .container-fluid > .row {
+.path-frontpage .container-fluid > .row.mooned {
   background: url(../images/moon-palm2.jpg) no-repeat 102% top;
   transition: 1.25s; }
+
+#block-webform form {
+  max-width: 900px; }
+
+#block-webform label {
+  margin-top: 0; }
+
+#block-webform .form-control {
+  color: #555;
+  background-color: #c7c7ce; }
+
+#block-webform .form-required:after {
+  background-image: none;
+  content: "*"; }
+
+#block-webform .btn-primary {
+  background-color: #555;
+  border-color: #555; }
+
+#block-webform .form-item {
+  display: none; }
 
 #block-views-block-projects-block-1 {
   border-bottom: 10px solid #000;
@@ -69,7 +90,8 @@ body {
     #block-views-block-projects-block-1 ul li {
       width: 16.6%;
       float: left;
-      margin: 0; }
+      margin: 0;
+      display: none; }
       #block-views-block-projects-block-1 ul li img {
         max-width: 100%;
         height: auto;
