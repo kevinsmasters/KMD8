@@ -82,7 +82,10 @@ body {
 #block-views-block-projects-block-1 {
   border-bottom: 10px solid #000;
   margin-bottom: 20px;
-  padding-bottom: 20px; }
+  padding-bottom: 20px;
+  background-image: url(../images/tiki.png);
+  background-repeat: no-repeat;
+  background-position: bottom right; }
   #block-views-block-projects-block-1 ul {
     list-style-type: none;
     margin: 0;
