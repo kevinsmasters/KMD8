@@ -14,6 +14,10 @@
       float: left;
       margin: 0;
       display: none;
+      @media #{$iphone-horiz} {
+        width: 50%;
+        display: block;
+      }
       img {
         max-width: 100%;
         height: auto;
@@ -27,5 +31,52 @@
   .view-footer {
     clear: left;
     padding-top: 20px;
+  }
+}
+.view-blog,
+.view-id-projects {
+  ul {
+    list-style-type: none;
+    li {
+      margin-left: 0;
+      margin-bottom: 3.5rem;
+    }
+  }
+}
+.view-id-projects {
+  li:after {
+    content: " ";
+    clear: left;
+    display: table;
+  }
+  .views-field-field-screenshot {
+    float: left;
+    margin-right: 20px;
+    width: 256px;
+    @media #{$iphone-horiz} {
+      width: 100%;
+      float: none;
+    }
+  }
+  .project-text {
+    float: left;
+    max-width: calc(100% - 276px);
+    @media #{$iphone-horiz} {
+      float: none;
+      max-width: none;
+      margin-top: 10px;
+    }
+  }
+}
+#block-homepageportrait {
+  float: left;
+  margin-top: 36px;
+  width: calc(40% / 2);
+  @media #{$iphone-horiz} {
+    width: 100%;
+    float: none;
+  }
+  img {
+    max-width: 100%;
   }
 }

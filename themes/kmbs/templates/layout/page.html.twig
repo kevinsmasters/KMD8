@@ -71,9 +71,10 @@
   {% set content_classes = page.sidebar_first ? ( page.sidebar_second ? 'col-sm-6' : 'col-sm-8' ) : ( page.sidebar_second ? 'col-sm-6' : 'col-sm-12' ) %}
 
   <div class="{{ b4_top_container }}">
-    {% if page.breadcrumb %}
-      {{ page.breadcrumb }}
-    {% endif %}
+      {#TODO: breadcrumb module needed for porfolio items, blog posts}
+    {##% if page.breadcrumb %#}
+      {#{ page.breadcrumb }#}
+    {##% endif %#}
     <div class="row">
       {% if page.sidebar_first %}
         <div class="{{ sidebar_first_classes }}">

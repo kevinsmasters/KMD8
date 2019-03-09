@@ -9,6 +9,9 @@
       text-align: center;
       padding: 12% 0 0;
     }
+    @media #{$iphone-horiz} {
+      max-height: 434px;
+    }
   }
   h1.page-title {
     display: none;
@@ -16,5 +19,13 @@
   .container-fluid > .row.mooned {
     background: url(../images/moon-palm2.jpg) no-repeat 102% top;
     transition: 1.25s;
+    @media #{$iphone-horiz} {
+      background: url(../images/moon-palm2a.jpg) no-repeat 102% top;
+    }
+  }
+  .container-fluid > .row {
+    margin-left: 30px;
+    margin-right: 30px;
+    max-width: none;
   }
 }
