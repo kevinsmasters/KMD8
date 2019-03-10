@@ -52,6 +52,8 @@ body {
     color: #8a92ad;
     margin-bottom: 20px;
     margin-top: 30px; }
+  body pre {
+    color: #bbbbbb; }
   body footer .region-footer {
     padding-left: 30px;
     padding-right: 30px;
