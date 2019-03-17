@@ -1,0 +1,25 @@
+cdn-styling:
+  version: 4.2.1
+  css:
+    theme:
+      https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css: { type: external, minified: true }
+
+cdn-scripts:
+  version: 4.2.1
+  js:
+    https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js: { type: external, minified: true }
+  dependencies:
+    - core/jquery
+
+global-styling:
+  css:
+    theme:
+      css/style.css: {}
+
+sass:
+  version: 1.0.0
+  css:
+    theme:
+      css/bootstrap4.sass.css: {}
+  dependencies:
+    - bootstrap4/cdn-styling
