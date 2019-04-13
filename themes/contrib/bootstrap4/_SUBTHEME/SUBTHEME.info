@@ -14,8 +14,8 @@ regions:
   sidebar_second: 'Sidebar second'
   footer: Footer
 
-; Information added by Drupal.org packaging script on 2019-02-23
-version = "8.x-1.0-beta5"
+; Information added by Drupal.org packaging script on 2019-04-02
+version = "8.x-1.0-beta6"
 core = "8.x"
 project = "bootstrap4"
-datestamp = "1550918289"
+datestamp = "1554214105"

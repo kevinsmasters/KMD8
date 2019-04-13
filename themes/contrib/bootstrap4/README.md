@@ -4,14 +4,13 @@
 
 * Includes Bootstrap 4 CDN (4.0 to 4.3)
 * Includes Bootstrap 4 breakpoints
-* SASS compilation within user interface (no NPM dependencies).
 * Bootstrap controls within user interface
 * No subtheme mode (unless template override required)
 
 ## SASS compilation:
 
-* Head to theme settings to enter SASS
-* OR use [sass command](https://sass-lang.com/install)
+* SASS compilation is no longer in the theme.
+* Use [Bootstrap4 Tools](https://www.drupal.org/project/bootstrap4_tools) module
 
 ## Installation
 
