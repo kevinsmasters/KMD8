@@ -43,13 +43,13 @@ body main h1.page-title {
   font-size: 2.5rem;
 }
 body .container-fluid > .row {
-  max-width: 1000px;
+  max-width: 1000px !important;
   margin: 0 auto;
 }
 @media (max-width: 667px) {
   body .container-fluid > .row {
-    margin-left: 30px;
-    margin-right: 30px;
+    margin-left: 30px !important;
+    margin-right: 30px !important;
   }
 }
 body a {
