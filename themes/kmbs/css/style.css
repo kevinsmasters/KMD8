@@ -44,7 +44,7 @@ body main h1.page-title {
 }
 body .container-fluid > .row {
   max-width: 1000px !important;
-  margin: 0 auto;
+  margin: 0 auto !important;
 }
 @media (max-width: 667px) {
   body .container-fluid > .row {
