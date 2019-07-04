@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9a89e75185b24fca3afd4973ebe36c1c",
+    "content-hash": "9f2a8e276dd30970e4342586af4aaeb4",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -6981,7 +6981,6 @@
     "stability-flags": {
         "drupal/captcha": 10,
         "drupal/coffee": 10,
-        "drupal/bootstrap4": 10,
         "drupal/feeds": 15,
         "behat/mink": 20,
         "behat/mink-selenium2-driver": 20
