@@ -1122,18 +1122,18 @@
     },
     {
         "name": "drupal/captcha",
-        "version": "1.0.0-beta4",
-        "version_normalized": "1.0.0.0-beta4",
+        "version": "1.0.0",
+        "version_normalized": "1.0.0.0",
         "source": {
             "type": "git",
             "url": "https://git.drupalcode.org/project/captcha.git",
-            "reference": "8.x-1.0-beta4"
+            "reference": "8.x-1.0"
         },
         "dist": {
             "type": "zip",
-            "url": "https://ftp.drupal.org/files/projects/captcha-8.x-1.0-beta4.zip",
-            "reference": "8.x-1.0-beta4",
-            "shasum": "08ecd947204852302704b0bd6ec73a6f6a871854"
+            "url": "https://ftp.drupal.org/files/projects/captcha-8.x-1.0.zip",
+            "reference": "8.x-1.0",
+            "shasum": "1707c67b97a17d701a194e6da86ad9b21631915b"
         },
         "require": {
             "drupal/core": "*"
@@ -1144,11 +1144,11 @@
                 "dev-1.x": "1.x-dev"
             },
             "drupal": {
-                "version": "8.x-1.0-beta4",
-                "datestamp": "1571689089",
+                "version": "8.x-1.0",
+                "datestamp": "1582292983",
                 "security-coverage": {
-                    "status": "not-covered",
-                    "message": "Beta releases are not covered by Drupal security advisories."
+                    "status": "covered",
+                    "message": "Covered by Drupal's security advisory policy"
                 }
             }
         },
@@ -1264,17 +1264,17 @@
     },
     {
         "name": "drupal/core",
-        "version": "8.8.1",
-        "version_normalized": "8.8.1.0",
+        "version": "8.8.4",
+        "version_normalized": "8.8.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/drupal/core.git",
-            "reference": "d339279f4c4b89477e0f4a8b775eb5dcb86b3087"
+            "reference": "34e59fcf702c1b3c497bbd6e92e68e546c5d15b8"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/drupal/core/zipball/d339279f4c4b89477e0f4a8b775eb5dcb86b3087",
-            "reference": "d339279f4c4b89477e0f4a8b775eb5dcb86b3087",
+            "url": "https://api.github.com/repos/drupal/core/zipball/34e59fcf702c1b3c497bbd6e92e68e546c5d15b8",
+            "reference": "34e59fcf702c1b3c497bbd6e92e68e546c5d15b8",
             "shasum": ""
         },
         "require": {
@@ -1440,7 +1440,7 @@
             "drupal/workflows": "self.version",
             "drupal/workspaces": "self.version"
         },
-        "time": "2019-12-18T10:34:03+00:00",
+        "time": "2020-03-18T16:26:33+00:00",
         "type": "drupal-core",
         "extra": {
             "drupal-scaffold": {
@@ -1891,18 +1891,18 @@
     },
     {
         "name": "drupal/recaptcha",
-        "version": "2.4.0",
-        "version_normalized": "2.4.0.0",
+        "version": "2.5.0",
+        "version_normalized": "2.5.0.0",
         "source": {
             "type": "git",
             "url": "https://git.drupalcode.org/project/recaptcha.git",
-            "reference": "8.x-2.4"
+            "reference": "8.x-2.5"
         },
         "dist": {
             "type": "zip",
-            "url": "https://ftp.drupal.org/files/projects/recaptcha-8.x-2.4.zip",
-            "reference": "8.x-2.4",
-            "shasum": "ee68020dc33f880313b83d8bbcb159ef85285c7a"
+            "url": "https://ftp.drupal.org/files/projects/recaptcha-8.x-2.5.zip",
+            "reference": "8.x-2.5",
+            "shasum": "ffc4e334c2b09cb04b75fa9e0df3f63d1ebde0bc"
         },
         "require": {
             "drupal/captcha": "^1.0.0-alpha1",
@@ -1914,8 +1914,8 @@
                 "dev-2.x": "2.x-dev"
             },
             "drupal": {
-                "version": "8.x-2.4",
-                "datestamp": "1548967980",
+                "version": "8.x-2.5",
+                "datestamp": "1580340616",
                 "security-coverage": {
                     "status": "covered",
                     "message": "Covered by Drupal's security advisory policy"
@@ -1958,21 +1958,21 @@
     },
     {
         "name": "drupal/token",
-        "version": "1.5.0",
-        "version_normalized": "1.5.0.0",
+        "version": "1.6.0",
+        "version_normalized": "1.6.0.0",
         "source": {
             "type": "git",
             "url": "https://git.drupalcode.org/project/token.git",
-            "reference": "8.x-1.5"
+            "reference": "8.x-1.6"
         },
         "dist": {
             "type": "zip",
-            "url": "https://ftp.drupal.org/files/projects/token-8.x-1.5.zip",
-            "reference": "8.x-1.5",
-            "shasum": "6382a7e1aabbd8246f1117a26bf4916d285b401d"
+            "url": "https://ftp.drupal.org/files/projects/token-8.x-1.6.zip",
+            "reference": "8.x-1.6",
+            "shasum": "22039a3d927220609e708932ac5c501b90ca4925"
         },
         "require": {
-            "drupal/core": "^8.5"
+            "drupal/core": "^8.7.7 || ^9"
         },
         "type": "drupal-module",
         "extra": {
@@ -1980,18 +1980,23 @@
                 "dev-1.x": "1.x-dev"
             },
             "drupal": {
-                "version": "8.x-1.5",
-                "datestamp": "1537557481",
+                "version": "8.x-1.6",
+                "datestamp": "1577708583",
                 "security-coverage": {
                     "status": "covered",
                     "message": "Covered by Drupal's security advisory policy"
+                }
+            },
+            "drush": {
+                "services": {
+                    "drush.services.yml": "^9 || ^10"
                 }
             }
         },
         "installation-source": "dist",
         "notification-url": "https://packages.drupal.org/8/downloads",
         "license": [
-            "GPL-2.0-or-later"
+            "GPL-2.0+"
         ],
         "authors": [
             {
@@ -2019,7 +2024,7 @@
                 "homepage": "https://www.drupal.org/user/4420"
             }
         ],
-        "description": "Provides a user interface for the Token API and some missing core tokens.",
+        "description": "Provides a user interface for the Token API, some missing core tokens.",
         "homepage": "https://www.drupal.org/project/token",
         "support": {
             "source": "https://git.drupalcode.org/project/token"
@@ -2027,21 +2032,21 @@
     },
     {
         "name": "drupal/webform",
-        "version": "5.6.0",
-        "version_normalized": "5.6.0.0",
+        "version": "5.9.0",
+        "version_normalized": "5.9.0.0",
         "source": {
             "type": "git",
             "url": "https://git.drupalcode.org/project/webform.git",
-            "reference": "8.x-5.6"
+            "reference": "8.x-5.9"
         },
         "dist": {
             "type": "zip",
-            "url": "https://ftp.drupal.org/files/projects/webform-8.x-5.6.zip",
-            "reference": "8.x-5.6",
-            "shasum": "58d77d2df011c25eb5086cab6d12743d63442cf5"
+            "url": "https://ftp.drupal.org/files/projects/webform-8.x-5.9.zip",
+            "reference": "8.x-5.9",
+            "shasum": "fb49b16dd0c421512834fc50c811fa2cd6c48121"
         },
         "require": {
-            "drupal/core": "*"
+            "drupal/core": "^8.7.7 || ^9"
         },
         "require-dev": {
             "drupal/address": "~1.4",
@@ -2052,14 +2057,14 @@
             "drupal/entity_print": "^2.1",
             "drupal/gnode": "*",
             "drupal/group": "~1.0",
-            "drupal/jsonapi": "~2.0 || ~8.7",
-            "drupal/mailsystem": "4.1",
+            "drupal/mailsystem": "~4.1",
             "drupal/select2": "~1.1",
             "drupal/smtp": "~1.0",
             "drupal/telephone_validation": "^2.2",
             "drupal/token": "~1.3",
             "drupal/webform_access": "*",
             "drupal/webform_attachment": "*",
+            "drupal/webform_devel": "*",
             "drupal/webform_entity_print": "*",
             "drupal/webform_group": "*",
             "drupal/webform_node": "*",
@@ -2073,8 +2078,8 @@
                 "dev-5.x": "5.x-dev"
             },
             "drupal": {
-                "version": "8.x-5.6",
-                "datestamp": "1575331086",
+                "version": "8.x-5.9",
+                "datestamp": "1584560013",
                 "security-coverage": {
                     "status": "covered",
                     "message": "Covered by Drupal's security advisory policy"
@@ -2138,7 +2143,7 @@
         "description": "Enables the creation of webforms and questionnaires.",
         "homepage": "https://drupal.org/project/webform",
         "support": {
-            "source": "http://cgit.drupalcode.org/webform",
+            "source": "https://git.drupalcode.org/project/webform",
             "issues": "https://www.drupal.org/project/issues/webform?version=8.x",
             "docs": "https://www.drupal.org/docs/8/modules/webform",
             "forum": "https://drupal.stackexchange.com/questions/tagged/webform"
@@ -4667,7 +4672,8 @@
             "http",
             "psr",
             "psr-7"
-        ]
+        ],
+        "abandoned": "laminas/laminas-diactoros"
     },
     {
         "name": "zendframework/zend-escaper",
@@ -4714,7 +4720,8 @@
             "ZendFramework",
             "escaper",
             "zf"
-        ]
+        ],
+        "abandoned": "laminas/laminas-escaper"
     },
     {
         "name": "zendframework/zend-feed",
@@ -4779,7 +4786,8 @@
             "ZendFramework",
             "feed",
             "zf"
-        ]
+        ],
+        "abandoned": "laminas/laminas-feed"
     },
     {
         "name": "zendframework/zend-stdlib",
@@ -4827,6 +4835,7 @@
             "ZendFramework",
             "stdlib",
             "zf"
-        ]
+        ],
+        "abandoned": "laminas/laminas-stdlib"
     }
 ]
