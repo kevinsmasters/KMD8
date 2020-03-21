@@ -4,14 +4,16 @@ namespace Drupal\feeds\Feeds\Processor;
 
 use Doctrine\Common\Inflector\Inflector;
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\feeds\Entity\FeedType;
+use Drupal\feeds\Event\FeedsEvents;
+use Drupal\feeds\Exception\EmptyFeedException;
 use Drupal\feeds\Exception\EntityAccessException;
 use Drupal\feeds\Exception\ValidationException;
 use Drupal\feeds\FeedInterface;
@@ -22,13 +24,14 @@ use Drupal\feeds\StateInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\user\EntityOwnerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a base entity processor.
  *
  * Creates entities from feed items.
  */
-abstract class EntityProcessorBase extends ProcessorBase implements EntityProcessorInterface {
+abstract class EntityProcessorBase extends ProcessorBase implements EntityProcessorInterface, ContainerFactoryPluginInterface {
 
   /**
    * The entity type manager.
@@ -101,6 +104,20 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
   /**
    * {@inheritdoc}
    */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager'),
+      $container->get('entity.query'),
+      $container->get('entity_type.bundle.info')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function process(FeedInterface $feed, ItemInterface $item, StateInterface $state) {
     // Initialize clean list if needed.
     $clean_state = $feed->getState(StateInterface::CLEAN);
@@ -119,6 +136,7 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
 
     // Bulk load existing entities to save on db queries.
     if ($skip_existing && $existing_entity_id) {
+      $state->skipped++;
       return;
     }
 
@@ -133,6 +151,7 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
     // Do not proceed if the item exists, has not changed, and we're not
     // forcing the update.
     if ($existing_entity_id && !$changed && !$this->configuration['skip_hash_check']) {
+      $state->skipped++;
       return;
     }
 
@@ -149,7 +168,13 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
 
       // Set field values.
       $this->map($feed, $entity, $item);
+
+      // Validate the entity.
+      $feed->dispatchEntityEvent(FeedsEvents::PROCESS_ENTITY_PREVALIDATE, $entity, $item);
       $this->entityValidate($entity);
+
+      // Dispatch presave event.
+      $feed->dispatchEntityEvent(FeedsEvents::PROCESS_ENTITY_PRESAVE, $entity, $item);
 
       // This will throw an exception on failure.
       $this->entitySaveAccess($entity);
@@ -159,10 +184,16 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
       // And... Save! We made it.
       $this->storageController->save($entity);
 
+      // Dispatch postsave event.
+      $feed->dispatchEntityEvent(FeedsEvents::PROCESS_ENTITY_POSTSAVE, $entity, $item);
+
       // Track progress.
       $existing_entity_id ? $state->updated++ : $state->created++;
     }
-
+    catch (EmptyFeedException $e) {
+      // Not an error.
+      $state->skipped++;
+    }
     // Something bad happened, log it.
     catch (ValidationException $e) {
       $state->failed++;
@@ -451,7 +482,7 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
 
     $messages = [];
     $args = [
-      '@entity' => Unicode::strtolower($this->entityTypeLabel()),
+      '@entity' => mb_strtolower($this->entityTypeLabel()),
       '%label' => $label,
       '%guid' => $guid,
       '@errors' => \Drupal::service('renderer')->renderRoot($element),

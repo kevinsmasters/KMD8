@@ -2,7 +2,6 @@
 
 namespace Drupal\feeds\Entity;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
@@ -72,6 +71,13 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
    * @var string
    */
   protected $description;
+
+  /**
+   * Help information shown to the user when creating a Feed of this type.
+   *
+   * @var string
+   */
+  protected $help;
 
   /**
    * The import period.
@@ -215,6 +221,13 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
    */
   public function getDescription() {
     return $this->description;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHelp() {
+    return $this->help;
   }
 
   /**

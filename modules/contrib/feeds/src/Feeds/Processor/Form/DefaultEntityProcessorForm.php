@@ -3,7 +3,6 @@
 namespace Drupal\feeds\Feeds\Processor\Form;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds\Plugin\Type\ExternalPluginFormBase;
 use Drupal\feeds\Plugin\Type\Processor\ProcessorInterface;
@@ -20,8 +19,8 @@ class DefaultEntityProcessorForm extends ExternalPluginFormBase {
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $tokens = [
-      '@entity' => Unicode::strtolower($this->plugin->entityTypeLabel()),
-      '@entities' => Unicode::strtolower($this->plugin->entityTypeLabelPlural()),
+      '@entity' => mb_strtolower($this->plugin->entityTypeLabel()),
+      '@entities' => mb_strtolower($this->plugin->entityTypeLabelPlural()),
     ];
 
     $form['update_existing'] = [
@@ -166,7 +165,7 @@ class DefaultEntityProcessorForm extends ExternalPluginFormBase {
     $options = [];
 
     $action_definitions = \Drupal::service('plugin.manager.action')->getDefinitionsByType($this->plugin->entityType());
-    foreach ($action_definitions as $definition) {
+    foreach ($action_definitions as $id => $definition) {
       // Filter out configurable actions.
       $interfaces = class_implements($definition['class']);
       if (isset($interfaces[ConfigurablePluginInterface::class])) {
@@ -178,7 +177,7 @@ class DefaultEntityProcessorForm extends ExternalPluginFormBase {
         continue;
       }
 
-      $options[$definition['id']] = $definition['label'];
+      $options[$id] = $definition['label'];
     }
 
     return [
