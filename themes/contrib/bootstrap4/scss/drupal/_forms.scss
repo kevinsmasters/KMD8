@@ -1,11 +1,15 @@
-// Forms.
-
 .form-control {
   &.form-checkbox,
   &.form-radio {
     display: inline-block;
     height: auto;
     width: unset;
+  }
+}
+
+input {
+  &[type='search'] {
+    box-sizing: border-box;
   }
 }
 
@@ -22,6 +26,21 @@
     }
   }
 }
+
 .node-form {
-  margin: 2 * $spacer;
+  @include media-breakpoint-up(lg) {
+    margin: 2 * $spacer;
+  }
+
+  .form-actions {
+    text-align: center;
+  }
+}
+
+.container-inline {
+  div,
+  label {
+    display: inline-block;
+    margin: 0;
+  }
 }

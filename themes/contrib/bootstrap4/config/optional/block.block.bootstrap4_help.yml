@@ -8,7 +8,7 @@ dependencies:
 id: bootstrap4_help
 theme: bootstrap4
 region: content
-weight: -2
+weight: -3
 provider: null
 plugin: help_block
 settings:

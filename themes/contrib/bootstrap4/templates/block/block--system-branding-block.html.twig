@@ -14,15 +14,27 @@
  */
 #}
 {% block content %}
-  <a href="{{ path('<front>') }}" title="{{ 'Home'|t }}" rel="home" class="navbar-brand d-flex align-items-center">
-    {% if site_logo %}
-      <img src="{{ site_logo }}" alt="{{ 'Home'|t }}" class="mr-2" />
-    {% endif %}
-    {% if site_name %}
-      {{ site_name }}
-    {% endif %}
+<div class="navbar-brand row d-flex m-0 p-0">
+
+  {% if site_logo %}
+  <div class="col-6 p-0">
+  <a href="{{ path('<front>') }}" title="{{ 'Home'|t }}" rel="home" class="site-logo">
+    <img src="{{ site_logo }}" alt="{{ 'Home'|t }}" />
   </a>
-  {% if site_slogan %}
-    <div class="site-slogan">{{ site_slogan }}</div>
+  </div>
   {% endif %}
+
+  {% if site_name %}
+  <div class="col-6">
+  <a href="{{ path('<front>') }}" title="{{ 'Home'|t }}" rel="home" class="site-title">
+    {{ site_name }}
+  </a>
+  </div>
+  {% endif %}
+
+
+  {% if site_slogan %}
+  <div class="site-slogan col-12 text-center">{{ site_slogan }}</div>
+  {% endif %}
+</div>
 {% endblock %}

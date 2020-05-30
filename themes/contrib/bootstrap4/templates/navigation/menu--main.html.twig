@@ -77,3 +77,22 @@
     {% endif %}
   {% endif %}
 {% endmacro %}
+
+{# {% macro sub_menu(items, menu_level) %}
+  <div class="dropdown-menu dropdown-menu-right">
+    {% for item in items %}
+      {%
+        set classes_link = [
+        'dropdown-item',
+        item.is_expanded ? 'dropdown-toggle',
+        item.is_collapsed ? 'dropdown-toggle',
+        item.in_active_trail ? 'active',
+      ]
+      %}
+      {{ link(item.title, item.url, { 'class': classes_link }) }}
+      {% if item.below %}
+        {{ menus.menu_links(item.below, attributes, menu_level + 1) }}
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endmacro %} #}

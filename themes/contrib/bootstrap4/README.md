@@ -2,26 +2,22 @@
 
 ## Features:
 
-* Includes Bootstrap 4 CDN (4.0 to 4.3)
+* Includes Bootstrap 4 library (JS and CSS)
 * Includes Bootstrap 4 breakpoints
-* SASS compilation within user interface (no NPM dependencies).
 * Bootstrap controls within user interface
-* No subtheme mode (unless template override required)
+* Comes with `no subtheme mode` (unless template override required)
+* Style guide with most of Boostrap components navigate to `http://[your site url]/themes/contrib/bootstrap4/style-guide`
 
 ## SASS compilation:
 
-* Head to theme settings to enter SASS
-* OR use [sass command](https://sass-lang.com/install)
+* SASS compilation is no longer in the theme.
+* Use [Bootstrap4 Tools](https://www.drupal.org/project/bootstrap4_tools) module
 
 ## Installation
 
 ### Using composer
 
 `composer require drupal/bootstrap4`
-
-### Not using composer
-
-If you can not use composer download [Ludwig](https://www.drupal.org/project/ludwig).
 
 ## Subtheme
 
@@ -30,3 +26,11 @@ If you can not use composer download [Ludwig](https://www.drupal.org/project/lud
 
 * You can create subtheme by running `bash bin/subtheme.sh [name] [path]`,
     e.g. `bash bin/subtheme.sh b4subtheme ..`
+
+* Interface subtheme creation is coming to [Bootstrap4 Tools](https://www.drupal.org/project/bootstrap4_tools) module
+
+## Development and patching
+
+- Install development dependencies by running `npm install`
+- To lint SASS files run `npm run lint:sass` (it will fail build if lint fails)
+- To compile SASS run `sass scss/style.scss css/style.css` (requires [SASS compiler](https://sass-lang.com/install))

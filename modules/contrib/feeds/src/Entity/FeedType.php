@@ -2,7 +2,6 @@
 
 namespace Drupal\feeds\Entity;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
@@ -40,6 +39,21 @@ use Drupal\feeds\Plugin\Type\Target\ConfigurableTargetInterface;
  *     "uuid" = "uuid",
  *     "status" = "status"
  *   },
+ *   config_export = {
+ *     "id",
+ *     "label",
+ *     "description",
+ *     "help",
+ *     "import_period",
+ *     "fetcher",
+ *     "fetcher_configuration",
+ *     "parser",
+ *     "parser_configuration",
+ *     "processor",
+ *     "processor_configuration",
+ *     "custom_sources",
+ *     "mappings"
+ *   },
  *   links = {
  *     "collection" = "/admin/structure/feeds",
  *     "add-form" = "/admin/structure/feeds/add",
@@ -72,6 +86,13 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
    * @var string
    */
   protected $description;
+
+  /**
+   * Help information shown to the user when creating a Feed of this type.
+   *
+   * @var string
+   */
+  protected $help;
 
   /**
    * The import period.
@@ -215,6 +236,13 @@ class FeedType extends ConfigEntityBundleBase implements FeedTypeInterface, Enti
    */
   public function getDescription() {
     return $this->description;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHelp() {
+    return $this->help;
   }
 
   /**
