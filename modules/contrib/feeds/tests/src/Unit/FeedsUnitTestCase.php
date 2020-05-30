@@ -53,7 +53,7 @@ namespace Drupal\Tests\feeds\Unit {
      *   A mocked stream wrapper manager.
      */
     protected function getMockStreamWrapperManager() {
-      $mock = $this->getMock(StreamWrapperManager::class, [], [], '', FALSE);
+      $mock = $this->createMock(StreamWrapperManager::class, [], [], '', FALSE);
 
       $wrappers = [
         'vfs' => 'VFS',
@@ -75,31 +75,6 @@ namespace Drupal\Tests\feeds\Unit {
      * Defines stub constants.
      */
     protected function defineConstants() {
-      if (!defined('DATETIME_STORAGE_TIMEZONE')) {
-        define('DATETIME_STORAGE_TIMEZONE', 'UTC');
-      }
-      if (!defined('DATETIME_DATETIME_STORAGE_FORMAT')) {
-        define('DATETIME_DATETIME_STORAGE_FORMAT', 'Y-m-d\TH:i:s');
-      }
-      if (!defined('DATETIME_DATE_STORAGE_FORMAT')) {
-        define('DATETIME_DATE_STORAGE_FORMAT', 'Y-m-d');
-      }
-
-      if (!defined('FILE_MODIFY_PERMISSIONS')) {
-        define('FILE_MODIFY_PERMISSIONS', 2);
-      }
-      if (!defined('FILE_CREATE_DIRECTORY')) {
-        define('FILE_CREATE_DIRECTORY', 1);
-      }
-      if (!defined('FILE_EXISTS_RENAME')) {
-        define('FILE_EXISTS_RENAME', 0);
-      }
-      if (!defined('FILE_EXISTS_REPLACE')) {
-        define('FILE_EXISTS_REPLACE', 1);
-      }
-      if (!defined('FILE_EXISTS_ERROR')) {
-        define('FILE_EXISTS_ERROR', 2);
-      }
       if (!defined('FILE_STATUS_PERMANENT')) {
         define('FILE_STATUS_PERMANENT', 1);
       }
@@ -111,16 +86,6 @@ namespace Drupal\Tests\feeds\Unit {
 namespace {
 
   use Drupal\Core\Session\AccountInterface;
-
-  if (!function_exists('drupal_set_message')) {
-
-    /**
-     * Stub for drupal_set_message() function.
-     */
-    function drupal_set_message() {
-    }
-
-  }
 
   if (!function_exists('filter_formats')) {
 
@@ -140,42 +105,6 @@ namespace {
      */
     function file_stream_wrapper_uri_normalize($dir) {
       return $dir;
-    }
-
-  }
-
-  if (!function_exists('drupal_tempnam')) {
-
-    /**
-     * Stub for drupal_tempnam() function.
-     */
-    function drupal_tempnam($scheme, $dir) {
-      mkdir('vfs://feeds/' . $dir);
-      $file = 'vfs://feeds/' . $dir . '/' . mt_rand(10, 1000);
-      touch($file);
-      return $file;
-    }
-
-  }
-
-  if (!function_exists('file_prepare_directory')) {
-
-    /**
-     * Stub for file_prepare_directory() function.
-     */
-    function file_prepare_directory(&$directory) {
-      return mkdir($directory);
-    }
-
-  }
-
-  if (!function_exists('drupal_basename')) {
-
-    /**
-     * Stub for drupal_basename() function.
-     */
-    function drupal_basename($uri, $suffix = NULL) {
-      return basename($uri, $suffix);
     }
 
   }

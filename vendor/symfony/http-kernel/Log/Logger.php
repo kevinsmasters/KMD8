@@ -40,7 +40,7 @@ class Logger extends AbstractLogger
     public function __construct($minLevel = null, $output = 'php://stderr', callable $formatter = null)
     {
         if (null === $minLevel) {
-            $minLevel = LogLevel::WARNING;
+            $minLevel = 'php://stdout' === $output || 'php://stderr' === $output ? LogLevel::CRITICAL : LogLevel::WARNING;
 
             if (isset($_ENV['SHELL_VERBOSITY']) || isset($_SERVER['SHELL_VERBOSITY'])) {
                 switch ((int) (isset($_ENV['SHELL_VERBOSITY']) ? $_ENV['SHELL_VERBOSITY'] : $_SERVER['SHELL_VERBOSITY'])) {
@@ -77,13 +77,12 @@ class Logger extends AbstractLogger
         }
 
         $formatter = $this->formatter;
-        fwrite($this->handle, $formatter($level, $message, $context));
+        @fwrite($this->handle, $formatter($level, $message, $context));
     }
 
     /**
      * @param string $level
      * @param string $message
-     * @param array  $context
      *
      * @return string
      */
@@ -106,6 +105,6 @@ class Logger extends AbstractLogger
             $message = strtr($message, $replacements);
         }
 
-        return sprintf('%s [%s] %s', date(\DateTime::RFC3339), $level, $message).\PHP_EOL;
+        return sprintf('%s [%s] %s', date(\DateTime::RFC3339), $level, $message).PHP_EOL;
     }
 }

@@ -8,6 +8,7 @@ use Drupal\feeds\Feeds\Parser\SyndicationParser;
 use Drupal\feeds\Result\RawFetcherResult;
 use Drupal\feeds\State;
 use Drupal\Tests\feeds\Unit\FeedsUnitTestCase;
+use Zend\Feed\Reader\StandaloneExtensionManager;
 
 /**
  * @coversDefaultClass \Drupal\feeds\Feeds\Parser\SyndicationParser
@@ -70,23 +71,24 @@ class SyndicationParserTest extends FeedsUnitTestCase {
 
     $container = new ContainerBuilder();
     $manager = new ZfExtensionManagerSfContainer('feed.reader.');
+    $manager->setContainer($container);
+    $manager->setStandalone(StandaloneExtensionManager::class);
 
     foreach ($this->readerExtensions as $key => $class) {
       $container->set($key, new $class());
     }
 
-    $manager->setContainer($container);
     $container->set('feed.bridge.reader', $manager);
     \Drupal::setContainer($container);
 
-    $this->feedType = $this->getMock('Drupal\feeds\FeedTypeInterface');
+    $this->feedType = $this->createMock('Drupal\feeds\FeedTypeInterface');
     $configuration = ['feed_type' => $this->feedType];
     $this->parser = new SyndicationParser($configuration, 'syndication', []);
     $this->parser->setStringTranslation($this->getStringTranslationStub());
 
     $this->state = new State();
 
-    $this->feed = $this->getMock('Drupal\feeds\FeedInterface');
+    $this->feed = $this->createMock('Drupal\feeds\FeedInterface');
     $this->feed->expects($this->any())
       ->method('getType')
       ->will($this->returnValue($this->feedType));
@@ -98,8 +100,8 @@ class SyndicationParserTest extends FeedsUnitTestCase {
    * @covers ::parse
    */
   public function testParse() {
-    $file = dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))) . '/tests/resources/rss/googlenewstz.rss2';
-    $fetcher_result = new RawFetcherResult(file_get_contents($file));
+    $file = $this->resourcesPath() . '/rss/googlenewstz.rss2';
+    $fetcher_result = new RawFetcherResult(file_get_contents($file), $this->getMockFileSystem());
 
     $result = $this->parser->parse($this->feed, $fetcher_result, $this->state);
     $this->assertSame(count($result), 6);
@@ -114,7 +116,7 @@ class SyndicationParserTest extends FeedsUnitTestCase {
    * @expectedException \RuntimeException
    */
   public function testInvalidFeed() {
-    $fetcher_result = new RawFetcherResult('beep boop');
+    $fetcher_result = new RawFetcherResult('beep boop', $this->getMockFileSystem());
     $result = $this->parser->parse($this->feed, $fetcher_result, $this->state);
   }
 
@@ -125,7 +127,7 @@ class SyndicationParserTest extends FeedsUnitTestCase {
    * @expectedException \Drupal\feeds\Exception\EmptyFeedException
    */
   public function testEmptyFeed() {
-    $result = new RawFetcherResult('');
+    $result = new RawFetcherResult('', $this->getMockFileSystem());
     $this->parser->parse($this->feed, $result, $this->state);
   }
 

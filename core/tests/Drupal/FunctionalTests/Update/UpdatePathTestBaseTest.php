@@ -4,6 +4,7 @@ namespace Drupal\FunctionalTests\Update;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Database\Database;
 
 /**
  * Tests the update path base class.
@@ -22,10 +23,9 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
    * {@inheritdoc}
    */
   protected function setDatabaseDumpFiles() {
-    $this->databaseDumpFiles = [
-      __DIR__ . '/../../../../modules/system/tests/fixtures/update/drupal-8.bare.standard.php.gz',
-      __DIR__ . '/../../../../modules/system/tests/fixtures/update/drupal-8.update-test-schema-enabled.php',
-    ];
+    $this->databaseDumpFiles[] = __DIR__ . '/../../../../modules/system/tests/fixtures/update/drupal-8.8.0.bare.standard.php.gz';
+    $this->databaseDumpFiles[] = __DIR__ . '/../../../../modules/system/tests/fixtures/update/drupal-8.update-test-schema-enabled.php';
+    $this->databaseDumpFiles[] = __DIR__ . '/../../../../modules/system/tests/fixtures/update/drupal-8.update-test-semver-update-n-enabled.php';
   }
 
   /**
@@ -35,8 +35,8 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
     // Set a value in the cache to prove caches are cleared.
     \Drupal::service('cache.default')->set(__CLASS__, 'Test');
 
-    foreach (['user', 'node', 'system', 'update_test_schema'] as $module) {
-      $this->assertEqual(drupal_get_installed_schema_version($module), 8000, new FormattableMarkup('Module @module schema is 8000', ['@module' => $module]));
+    foreach (['user' => 8100, 'node' => 8700, 'system' => 8805, 'update_test_schema' => 8000] as $module => $schema) {
+      $this->assertEqual(drupal_get_installed_schema_version($module), $schema, new FormattableMarkup('Module @module schema is @schema', ['@module' => $module, '@schema' => $schema]));
     }
 
     // Ensure that all {router} entries can be unserialized. If they cannot be
@@ -61,6 +61,7 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
     // Before accessing the site we need to run updates first or the site might
     // be broken.
     $this->runUpdates();
+    $this->assertEquals('standard', \Drupal::config('core.extension')->get('profile'));
     $this->assertEqual(\Drupal::config('system.site')->get('name'), 'Site-Install');
     $this->drupalGet('<front>');
     $this->assertText('Site-Install');
@@ -80,11 +81,13 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
    * Test that updates are properly run.
    */
   public function testUpdateHookN() {
+    $connection = Database::getConnection();
+
     // Increment the schema version.
     \Drupal::state()->set('update_test_schema_version', 8001);
     $this->runUpdates();
 
-    $select = \Drupal::database()->select('watchdog');
+    $select = $connection->select('watchdog');
     $select->orderBy('wid', 'DESC');
     $select->range(0, 5);
     $select->fields('watchdog', ['message']);
@@ -96,8 +99,55 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
 
     // Ensure schema has changed.
     $this->assertEqual(drupal_get_installed_schema_version('update_test_schema', TRUE), 8001);
+    $this->assertEqual(drupal_get_installed_schema_version('update_test_semver_update_n', TRUE), 8001);
     // Ensure the index was added for column a.
-    $this->assertTrue(db_index_exists('update_test_schema_table', 'test'), 'Version 8001 of the update_test_schema module is installed.');
+    $this->assertTrue($connection->schema()->indexExists('update_test_schema_table', 'test'), 'Version 8001 of the update_test_schema module is installed.');
+    // Ensure update_test_semver_update_n_update_8001 was run.
+    $this->assertEquals(\Drupal::state()->get('update_test_semver_update_n_update_8001'), 'Yes, I was run. Thanks for testing!');
+  }
+
+  /**
+   * Tests that path aliases are not processed during database updates.
+   */
+  public function testPathAliasProcessing() {
+    // Add a path alias for the '/admin' system path.
+    $values = [
+      'path' => '/admin/structure',
+      'alias' => '/admin-structure-alias',
+      'langcode' => 'und',
+      'status' => 1,
+    ];
+
+    $database = \Drupal::database();
+    $id = $database->insert('path_alias')
+      ->fields($values + ['uuid' => \Drupal::service('uuid')->generate()])
+      ->execute();
+
+    $revision_id = $database->insert('path_alias_revision')
+      ->fields($values + ['id' => $id, 'revision_default' => 1])
+      ->execute();
+
+    $database->update('path_alias')
+      ->fields(['revision_id' => $revision_id])
+      ->condition('id', $id)
+      ->execute();
+
+    // Increment the schema version.
+    \Drupal::state()->set('update_test_schema_version', 8002);
+    $this->runUpdates();
+
+    // Check that the alias defined earlier is not used during the update
+    // process.
+    $this->assertSession()->linkByHrefExists('/admin/structure');
+    $this->assertSession()->linkByHrefNotExists('/admin-structure-alias');
+
+    $account = $this->createUser(['administer site configuration', 'access administration pages', 'access site reports']);
+    $this->drupalLogin($account);
+
+    // Go to the status report page and check that the alias is used.
+    $this->drupalGet('admin/reports/status');
+    $this->assertSession()->linkByHrefNotExists('/admin/structure');
+    $this->assertSession()->linkByHrefExists('/admin-structure-alias');
   }
 
   /**
@@ -144,6 +194,27 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
 
     // Ensure the test runners cache has been cleared.
     $this->assertFalse(\Drupal::service('cache.default')->get(__CLASS__));
+  }
+
+  /**
+   * Tests that schema can be excluded from testing.
+   *
+   * @see \Drupal\FunctionalTests\Update\UpdatePathTestBase::runUpdates()
+   * @see \Drupal\Core\Test\TestSetupTrait::$configSchemaCheckerExclusions
+   */
+  public function testSchemaChecking() {
+    // Create some configuration that should be skipped.
+    $this->config('config_schema_test.noschema')->set('foo', 'bar')->save();
+    $this->runUpdates();
+    $this->assertSame('bar', $this->config('config_schema_test.noschema')->get('foo'));
+
+  }
+
+  /**
+   * Test the database fixtures are setup correctly.
+   */
+  public function testFixturesSetup() {
+    $this->assertCount(3, $this->databaseDumpFiles);
   }
 
 }

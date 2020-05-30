@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace TYPO3\PharStreamWrapper\Resolver;
 
 /*
@@ -26,10 +27,24 @@ class PharInvocation
     private $alias;
 
     /**
+     * @var bool
+     * @see \TYPO3\PharStreamWrapper\PharStreamWrapper::collectInvocation()
+     */
+    private $confirmed = false;
+
+    /**
+     * Arbitrary variables to be used by interceptors as registry
+     * (e.g. in order to avoid duplicate processing and assertions)
+     *
+     * @var array
+     */
+    private $variables;
+
+    /**
      * @param string $baseName
      * @param string $alias
      */
-    public function __construct($baseName, $alias = '')
+    public function __construct(string $baseName, string $alias = '')
     {
         if ($baseName === '') {
             throw new Exception(
@@ -44,7 +59,7 @@ class PharInvocation
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->baseName;
     }
@@ -52,7 +67,7 @@ class PharInvocation
     /**
      * @return string
      */
-    public function getBaseName()
+    public function getBaseName(): string
     {
         return $this->baseName;
     }
@@ -60,16 +75,47 @@ class PharInvocation
     /**
      * @return null|string
      */
-    public function getAlias()
+    public function getAlias(): string
     {
         return $this->alias;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isConfirmed(): bool
+    {
+        return $this->confirmed;
+    }
+
+    public function confirm()
+    {
+        $this->confirmed = true;
+    }
+
+    /**
+     * @param string $name
+     * @return mixed|null
+     */
+    public function getVariable(string $name)
+    {
+        return $this->variables[$name] ?? null;
+    }
+
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
+    public function setVariable(string $name, $value)
+    {
+        $this->variables[$name] = $value;
     }
 
     /**
      * @param PharInvocation $other
      * @return bool
      */
-    public function equals(PharInvocation $other)
+    public function equals(PharInvocation $other): bool
     {
         return $other->baseName === $this->baseName
             && $other->alias === $this->alias;

@@ -1,15 +1,8 @@
-.navbar-brand {
-  img {
-    height: 100%;
-    width: 100%;
-  }
-}
-
 a {
   &.tabledrag-handle {
     .handle {
       display: table-cell;
-      padding-right: 1rem !important;
+      padding-right: $spacer !important; // sass-lint:disable-line no-important
     }
   }
 }

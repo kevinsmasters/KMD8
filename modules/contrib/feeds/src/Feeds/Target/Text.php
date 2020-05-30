@@ -4,9 +4,11 @@ namespace Drupal\feeds\Feeds\Target;
 
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\feeds\FieldTargetDefinition;
 use Drupal\feeds\Plugin\Type\Target\ConfigurableTargetInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a text field mapper.
@@ -17,11 +19,10 @@ use Drupal\feeds\Plugin\Type\Target\ConfigurableTargetInterface;
  *     "text",
  *     "text_long",
  *     "text_with_summary"
- *   },
- *   arguments = {"@current_user"}
+ *   }
  * )
  */
-class Text extends StringTarget implements ConfigurableTargetInterface {
+class Text extends StringTarget implements ConfigurableTargetInterface, ContainerFactoryPluginInterface {
 
   /**
    * The current user.
@@ -50,6 +51,18 @@ class Text extends StringTarget implements ConfigurableTargetInterface {
   /**
    * {@inheritdoc}
    */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('current_user')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected static function prepareTarget(FieldDefinitionInterface $field_definition) {
     $definition = FieldTargetDefinition::createFromFieldDefinition($field_definition)
       ->addProperty('value');
@@ -73,13 +86,14 @@ class Text extends StringTarget implements ConfigurableTargetInterface {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return ['format' => 'plain_text'];
+    return parent::defaultConfiguration() + ['format' => 'plain_text'];
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
     $options = [];
     foreach (filter_formats($this->user) as $id => $format) {
       $options[$id] = $format->label();
@@ -98,14 +112,17 @@ class Text extends StringTarget implements ConfigurableTargetInterface {
    * {@inheritdoc}
    */
   public function getSummary() {
+    $summary = parent::getSummary();
+
     $formats = \Drupal::entityTypeManager()
       ->getStorage('filter_format')
       ->loadByProperties(['status' => '1', 'format' => $this->configuration['format']]);
 
     if ($formats) {
       $format = reset($formats);
-      return $this->t('Format: %format', ['%format' => $format->label()]);
+      $summary[] = $this->t('Format: %format', ['%format' => $format->label()]);
     }
+    return $summary;
   }
 
 }

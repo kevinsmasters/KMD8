@@ -3,6 +3,7 @@
 namespace Drupal\Tests\feeds\Unit\Feeds\Target;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\feeds\Feeds\Target\DateTime;
 
 /**
@@ -31,7 +32,7 @@ class DateTimeTest extends FieldTargetWithContainerTestBase {
   public function setUp() {
     parent::setUp();
 
-    $this->feedType = $this->getMock('Drupal\feeds\FeedTypeInterface');
+    $this->feedType = $this->createMock('Drupal\feeds\FeedTypeInterface');
     $method = $this->getMethod('Drupal\feeds\Feeds\Target\DateTime', 'prepareTarget')->getClosure();
     $this->targetDefinition = $method($this->getMockFieldDefinition(['datetime_type' => 'time']));
   }
@@ -61,7 +62,7 @@ class DateTimeTest extends FieldTargetWithContainerTestBase {
 
     $values = ['value' => 1411606273];
     $method(0, $values);
-    $this->assertSame(date(DATETIME_DATE_STORAGE_FORMAT, 1411606273), $values['value']);
+    $this->assertSame(date(DateTimeItemInterface::DATE_STORAGE_FORMAT, 1411606273), $values['value']);
   }
 
   /**

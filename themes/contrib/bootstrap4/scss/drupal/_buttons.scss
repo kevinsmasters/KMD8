@@ -1,5 +1,3 @@
-// Buttons.
-
 a {
   &.button {
     @extend .btn;
@@ -19,7 +17,8 @@ a {
   .btn-#{$color} {
     a {
       color: color-yiq($value);
-      &:hover{
+
+      &:hover {
         color: color-yiq($value);
         text-decoration: none;
       }
@@ -36,7 +35,7 @@ a {
     }
 
     a {
-      &:hover{
+      &:hover {
         color: color-yiq($value);
         text-decoration: none;
       }

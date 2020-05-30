@@ -32,7 +32,7 @@ class CsvParser extends ParserBase {
     // Get sources.
     $sources = [];
     foreach ($feed->getType()->getMappingSources() as $key => $info) {
-      if (!empty($info['value'])) {
+      if (isset($info['value']) && trim(strval($info['value'])) !== '') {
         $sources[$info['value']] = $key;
       }
     }
@@ -96,6 +96,16 @@ class CsvParser extends ParserBase {
    */
   protected function configSourceLabel() {
     return $this->t('CSV source');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function configSourceDescription() {
+    if ($this->getConfiguration('no_headers')) {
+      return $this->t('Enter which column number of the CSV file to use: 0, 1, 2, etc.');
+    }
+    return $this->t('Enter the exact CSV column name. This is case-sensitive.');
   }
 
   /**

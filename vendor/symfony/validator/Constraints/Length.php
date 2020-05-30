@@ -47,12 +47,15 @@ class Length extends Constraint
                 'min' => $options,
                 'max' => $options,
             ];
+        } elseif (\is_array($options) && isset($options['value']) && !isset($options['min']) && !isset($options['max'])) {
+            $options['min'] = $options['max'] = $options['value'];
+            unset($options['value']);
         }
 
         parent::__construct($options);
 
         if (null === $this->min && null === $this->max) {
-            throw new MissingOptionsException(sprintf('Either option "min" or "max" must be given for constraint %s', __CLASS__), ['min', 'max']);
+            throw new MissingOptionsException(sprintf('Either option "min" or "max" must be given for constraint "%s".', __CLASS__), ['min', 'max']);
         }
     }
 }

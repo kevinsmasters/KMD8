@@ -6,7 +6,7 @@ dependencies:
 id: bootstrap4_local_tasks
 theme: bootstrap4
 region: content
-weight: -3
+weight: -4
 provider: null
 plugin: local_tasks_block
 settings:

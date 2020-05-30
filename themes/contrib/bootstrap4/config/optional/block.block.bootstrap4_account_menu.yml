@@ -9,8 +9,8 @@ dependencies:
     - bootstrap4
 id: bootstrap4_account_menu
 theme: bootstrap4
-region: navigation
-weight: 0
+region: nav_additional
+weight: -7
 provider: null
 plugin: 'system_menu_block:account'
 settings:
@@ -20,4 +20,5 @@ settings:
   label_display: '0'
   level: 1
   depth: 0
+  expand_all_items: false
 visibility: {  }

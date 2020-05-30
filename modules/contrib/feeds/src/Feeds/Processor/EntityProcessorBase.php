@@ -4,31 +4,38 @@ namespace Drupal\feeds\Feeds\Processor;
 
 use Doctrine\Common\Inflector\Inflector;
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
-use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\feeds\Entity\FeedType;
+use Drupal\feeds\Event\FeedsEvents;
+use Drupal\feeds\Exception\EmptyFeedException;
 use Drupal\feeds\Exception\EntityAccessException;
 use Drupal\feeds\Exception\ValidationException;
 use Drupal\feeds\FeedInterface;
 use Drupal\feeds\Feeds\Item\ItemInterface;
 use Drupal\feeds\Feeds\State\CleanStateInterface;
 use Drupal\feeds\Plugin\Type\Processor\EntityProcessorInterface;
+use Drupal\feeds\Plugin\Type\Target\TargetInterface;
+use Drupal\feeds\Plugin\Type\Target\TranslatableTargetInterface;
 use Drupal\feeds\StateInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\user\EntityOwnerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a base entity processor.
  *
  * Creates entities from feed items.
  */
-abstract class EntityProcessorBase extends ProcessorBase implements EntityProcessorInterface {
+abstract class EntityProcessorBase extends ProcessorBase implements EntityProcessorInterface, ContainerFactoryPluginInterface {
 
   /**
    * The entity type manager.
@@ -52,13 +59,6 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
   protected $entityType;
 
   /**
-   * The entity query factory object.
-   *
-   * @var \Drupal\Core\Entity\Query\QueryFactory
-   */
-  protected $queryFactory;
-
-  /**
    * Flag indicating that this processor is locked.
    *
    * @var bool
@@ -73,6 +73,13 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
   protected $entityTypeBundleInfo;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
    * Constructs an EntityProcessorBase object.
    *
    * @param array $configuration
@@ -83,19 +90,33 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
    *   The plugin definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
-   *   The entity query factory.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_type_manager, QueryFactory $query_factory, EntityTypeBundleInfoInterface $entity_type_bundle_info) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LanguageManagerInterface $language_manager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityType = $entity_type_manager->getDefinition($plugin_definition['entity_type']);
     $this->storageController = $entity_type_manager->getStorage($plugin_definition['entity_type']);
-    $this->queryFactory = $query_factory;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
+    $this->languageManager = $language_manager;
 
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager'),
+      $container->get('entity_type.bundle.info'),
+      $container->get('language_manager')
+    );
   }
 
   /**
@@ -119,6 +140,7 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
 
     // Bulk load existing entities to save on db queries.
     if ($skip_existing && $existing_entity_id) {
+      $state->skipped++;
       return;
     }
 
@@ -133,6 +155,7 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
     // Do not proceed if the item exists, has not changed, and we're not
     // forcing the update.
     if ($existing_entity_id && !$changed && !$this->configuration['skip_hash_check']) {
+      $state->skipped++;
       return;
     }
 
@@ -149,7 +172,13 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
 
       // Set field values.
       $this->map($feed, $entity, $item);
+
+      // Validate the entity.
+      $feed->dispatchEntityEvent(FeedsEvents::PROCESS_ENTITY_PREVALIDATE, $entity, $item);
       $this->entityValidate($entity);
+
+      // Dispatch presave event.
+      $feed->dispatchEntityEvent(FeedsEvents::PROCESS_ENTITY_PRESAVE, $entity, $item);
 
       // This will throw an exception on failure.
       $this->entitySaveAccess($entity);
@@ -159,10 +188,16 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
       // And... Save! We made it.
       $this->storageController->save($entity);
 
+      // Dispatch postsave event.
+      $feed->dispatchEntityEvent(FeedsEvents::PROCESS_ENTITY_POSTSAVE, $entity, $item);
+
       // Track progress.
       $existing_entity_id ? $state->updated++ : $state->created++;
     }
-
+    catch (EmptyFeedException $e) {
+      // Not an error.
+      $state->skipped++;
+    }
     // Something bad happened, log it.
     catch (ValidationException $e) {
       $state->failed++;
@@ -194,7 +229,9 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
     }
 
     // Set list of entities to clean.
-    $ids = $this->queryFactory->get($this->entityType())
+    $ids = $this->entityTypeManager
+      ->getStorage($this->entityType())
+      ->getQuery()
       ->condition('feeds_item.target_id', $feed->id())
       ->condition('feeds_item.hash', $this->getConfiguration('update_non_existent'), '<>')
       ->execute();
@@ -251,7 +288,9 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
    */
   public function clear(FeedInterface $feed, StateInterface $state) {
     // Build base select statement.
-    $query = $this->queryFactory->get($this->entityType())
+    $query = $this->entityTypeManager
+      ->getStorage($this->entityType())
+      ->getQuery()
       ->condition('feeds_item.target_id', $feed->id());
 
     // If there is no total, query it.
@@ -340,6 +379,21 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
   }
 
   /**
+   * Provides a list of languages available on the site.
+   *
+   * @return array
+   *   A keyed array of language_key => language_name.
+   *   For example: 'en' => 'English').
+   */
+  public function languageOptions() {
+    foreach ($this->languageManager->getLanguages(LanguageInterface::STATE_ALL) as $language) {
+      $langcodes[$language->getId()] = $language->getName();
+    }
+
+    return $langcodes;
+  }
+
+  /**
    * Returns the label of the entity type being processed.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
@@ -399,7 +453,34 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
         $entity->setOwnerId($this->configuration['owner_id']);
       }
     }
+
+    // Set language if the entity type has a field for it.
+    if ($this->entityType->hasKey('langcode')) {
+      $entity->{$this->entityType->getKey('langcode')} = $this->entityLanguage();
+    }
+
     return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTranslation(FeedInterface $feed, TranslatableInterface $entity, $langcode) {
+    if (!$entity->hasTranslation($langcode)) {
+      $translation = $entity->addTranslation($langcode);
+      if ($translation instanceof EntityOwnerInterface) {
+        if ($this->configuration['owner_feed_author']) {
+          $translation->setOwnerId($feed->getOwnerId());
+        }
+        else {
+          $translation->setOwnerId($this->configuration['owner_id']);
+        }
+      }
+
+      return $translation;
+    }
+
+    return $entity->getTranslation($langcode);
   }
 
   /**
@@ -451,7 +532,7 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
 
     $messages = [];
     $args = [
-      '@entity' => Unicode::strtolower($this->entityTypeLabel()),
+      '@entity' => mb_strtolower($this->entityTypeLabel()),
       '%label' => $label,
       '%guid' => $guid,
       '@errors' => \Drupal::service('renderer')->renderRoot($element),
@@ -513,6 +594,19 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
   }
 
   /**
+   * Returns the current language for entities.
+   *
+   * This checks if the configuration value is valid.
+   *
+   * @return string
+   *   The current language code.
+   */
+  protected function entityLanguage() {
+    $langcodes = $this->languageOptions();
+    return isset($langcodes[$this->configuration['langcode']]) ? $this->configuration['langcode'] : LanguageInterface::LANGCODE_DEFAULT;
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function entityDeleteMultiple(array $entity_ids) {
@@ -529,7 +623,7 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
       'update_non_existent' => static::KEEP_NON_EXISTENT,
       'skip_hash_check' => FALSE,
       'values' => [],
-      'authorize' => $this->entityType->isSubclassOf('Drupal\user\EntityOwnerInterface'),
+      'authorize' => $this->entityType->entityClassImplements('Drupal\user\EntityOwnerInterface'),
       'expire' => static::EXPIRE_NEVER,
       'owner_id' => 0,
       'owner_feed_author' => 0,
@@ -538,6 +632,11 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
     // Bundle.
     if ($bundle_key = $this->entityType->getKey('bundle')) {
       $defaults['values'] = [$bundle_key => NULL];
+    }
+
+    // Language.
+    if ($langcode_key = $this->entityType->getKey('langcode')) {
+      $defaults['langcode'] = $this->languageManager->getDefaultLanguage()->getId();
     }
 
     return $defaults;
@@ -651,7 +750,9 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
       return;
     }
     $expire_time = \Drupal::service('datetime.time')->getRequestTime() - $time;
-    return $this->queryFactory->get($this->entityType())
+    return $this->entityTypeManager
+      ->getStorage($this->entityType())
+      ->getQuery()
       ->condition('feeds_item.target_id', $feed->id())
       ->condition('feeds_item.imported', $expire_time, '<')
       ->execute();
@@ -669,7 +770,9 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
    * {@inheritdoc}
    */
   public function getItemCount(FeedInterface $feed) {
-    return $this->queryFactory->get($this->entityType())
+    return $this->entityTypeManager
+      ->getStorage($this->entityType())
+      ->getQuery()
       ->condition('feeds_item.target_id', $feed->id())
       ->count()
       ->execute();
@@ -679,7 +782,9 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
    * {@inheritdoc}
    */
   public function getImportedItemIds(FeedInterface $feed) {
-    return $this->queryFactory->get($this->entityType())
+    return $this->entityTypeManager
+      ->getStorage($this->entityType())
+      ->getQuery()
       ->condition('feeds_item.target_id', $feed->id())
       ->execute();
   }
@@ -735,7 +840,9 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
   public function isLocked() {
     if ($this->isLocked === NULL) {
       // Look for feeds.
-      $this->isLocked = (bool) $this->queryFactory->get('feeds_feed')
+      $this->isLocked = (bool) $this->entityTypeManager
+        ->getStorage('feeds_feed')
+        ->getQuery()
         ->condition('type', $this->feedType->id())
         ->range(0, 1)
         ->execute();
@@ -776,17 +883,19 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
     // Mappers add to existing fields rather than replacing them. Hence we need
     // to clear target elements of each item before mapping in case we are
     // mapping on a prepopulated item such as an existing node.
-    foreach ($mappings as $mapping) {
+    foreach ($mappings as $delta => $mapping) {
       if ($mapping['target'] == 'feeds_item') {
         // Skip feeds item as this field gets default values before mapping.
         continue;
       }
-      unset($entity->{$mapping['target']});
+
+      // Clear the target.
+      $this->clearTarget($entity, $this->feedType->getTargetPlugin($delta), $mapping['target']);
     }
 
     // Gather all of the values for this item.
     $source_values = [];
-    foreach ($mappings as $mapping) {
+    foreach ($mappings as $delta => $mapping) {
       $target = $mapping['target'];
 
       foreach ($mapping['map'] as $column => $source) {
@@ -796,16 +905,16 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
           continue;
         }
 
-        if (!isset($source_values[$target][$column])) {
-          $source_values[$target][$column] = [];
+        if (!isset($source_values[$delta][$column])) {
+          $source_values[$delta][$column] = [];
         }
 
         $value = $item->get($source);
         if (!is_array($value)) {
-          $source_values[$target][$column][] = $value;
+          $source_values[$delta][$column][] = $value;
         }
         else {
-          $source_values[$target][$column] = array_merge($source_values[$target][$column], $value);
+          $source_values[$delta][$column] = array_merge($source_values[$delta][$column], $value);
         }
       }
     }
@@ -825,12 +934,50 @@ abstract class EntityProcessorBase extends ProcessorBase implements EntityProces
     // Set target values.
     foreach ($mappings as $delta => $mapping) {
       $plugin = $this->feedType->getTargetPlugin($delta);
-      if (isset($field_values[$mapping['target']])) {
-        $plugin->setTarget($feed, $entity, $mapping['target'], $field_values[$mapping['target']]);
+      if (isset($field_values[$delta])) {
+        $plugin->setTarget($feed, $entity, $mapping['target'], $field_values[$delta]);
       }
     }
 
     return $entity;
+  }
+
+  /**
+   * Clears the target on the entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to clear the target on.
+   * @param \Drupal\feeds\Plugin\Type\Target\TargetInterface $target
+   *   The target plugin.
+   * @param string $target_name
+   *   The property to clear on the entity.
+   */
+  protected function clearTarget(EntityInterface $entity, TargetInterface $target, $target_name) {
+    $entity_target = $entity;
+
+    // If the target implements TranslatableTargetInterface and has a language
+    // configured, empty the value for the targeted language only.
+    // In all other cases, empty the target for the entity in the default
+    // language or just the whole target if the entity isn't translatable.
+    if ($entity instanceof TranslatableInterface && $target instanceof TranslatableTargetInterface) {
+      // We expect the target to return a langcode. If it doesn't return one, we
+      // expect that the target for the entity in the default language must be
+      // emptied.
+      $langcode = $target->getLangcode();
+      if ($langcode) {
+        // Langcode exists, check if the entity is available in that language.
+        if ($entity->hasTranslation($langcode)) {
+          $entity_target = $entity->getTranslation($langcode);
+        }
+        else {
+          // Entity hasn't got a translation in the given langcode yet, so we
+          // don't need to empty anything.
+          return;
+        }
+      }
+    }
+
+    unset($entity_target->{$target_name});
   }
 
   /**

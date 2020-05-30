@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace TYPO3\PharStreamWrapper\Phar;
 
 /*
@@ -19,6 +20,11 @@ class Reader
     private $fileName;
 
     /**
+     * Mime-type in order to use zlib, bzip2 or no compression.
+     * In case ext-fileinfo is not present only the relevant types
+     * 'application/x-gzip' and 'application/x-bzip2' are assigned
+     * to this class property.
+     *
      * @var string
      */
     private $fileType;
@@ -26,7 +32,7 @@ class Reader
     /**
      * @param string $fileName
      */
-    public function __construct($fileName)
+    public function __construct(string $fileName)
     {
         if (strpos($fileName, '://') !== false) {
             throw new ReaderException(
@@ -42,7 +48,7 @@ class Reader
     /**
      * @return Container
      */
-    public function resolveContainer()
+    public function resolveContainer(): Container
     {
         $data = $this->extractData($this->resolveStream() . $this->fileName);
 
@@ -79,7 +85,7 @@ class Reader
      * @param string $fileName e.g. '/path/file.phar' or 'compress.zlib:///path/file.phar'
      * @return array
      */
-    private function extractData($fileName)
+    private function extractData(string $fileName): array
     {
         $stubContent = null;
         $manifestContent = null;
@@ -100,21 +106,19 @@ class Reader
                 break;
             }
 
-            $stubPosition = strpos($line, '<?php');
-            $manifestPosition = strpos($line, '__HALT_COMPILER()');
+            $manifestPosition = strpos($line, '__HALT_COMPILER();');
 
-            // line contains both, start of (empty) stub and start of manifest
-            if ($stubContent === null && $stubPosition !== false
-                && $manifestContent === null && $manifestPosition !== false) {
-                $stubContent = substr($line, $stubPosition, $manifestPosition - $stubPosition - 1);
-                $manifestContent = preg_replace('#^.*__HALT_COMPILER\(\)[^>]*\?>(\r|\n)*#', '', $line);
+            // first line contains start of manifest
+            if ($stubContent === null && $manifestContent === null && $manifestPosition !== false) {
+                $stubContent = substr($line, 0, $manifestPosition - 1);
+                $manifestContent = preg_replace('#^.*__HALT_COMPILER\(\);(?>[ \n]\?>(?>\r\n|\n)?)?#', '', $line);
                 $manifestLength = $this->resolveManifestLength($manifestContent);
             // line contains start of stub
-            } elseif ($stubContent === null && $stubPosition !== false) {
-                $stubContent = substr($line, $stubPosition);
+            } elseif ($stubContent === null) {
+                $stubContent = $line;
             // line contains start of manifest
             } elseif ($manifestContent === null && $manifestPosition !== false) {
-                $manifestContent = preg_replace('#^.*__HALT_COMPILER\(\)[^>]*\?>(\r|\n)*#', '', $line);
+                $manifestContent = preg_replace('#^.*__HALT_COMPILER\(\);(?>[ \n]\?>(?>\r\n|\n)?)?#', '', $line);
                 $manifestLength = $this->resolveManifestLength($manifestContent);
             // manifest has been started (thus is cannot be stub anymore), add content
             } elseif ($manifestContent !== null) {
@@ -127,11 +131,11 @@ class Reader
         }
         fclose($resource);
 
-        return array(
+        return [
             'stubContent' => $stubContent,
             'manifestContent' => $manifestContent,
             'manifestLength' => $manifestLength,
-        );
+        ];
     }
 
     /**
@@ -139,9 +143,9 @@ class Reader
      *
      * @return string
      */
-    private function resolveStream()
+    private function resolveStream(): string
     {
-        if ($this->fileType === 'application/x-gzip') {
+        if ($this->fileType === 'application/x-gzip' || $this->fileType === 'application/gzip') {
             return 'compress.zlib://';
         } elseif ($this->fileType === 'application/x-bzip2') {
             return 'compress.bzip2://';
@@ -154,15 +158,44 @@ class Reader
      */
     private function determineFileType()
     {
-        $fileInfo = new \finfo();
-        return $fileInfo->file($this->fileName, FILEINFO_MIME_TYPE);
+        if (class_exists('\\finfo')) {
+            $fileInfo = new \finfo();
+            return $fileInfo->file($this->fileName, FILEINFO_MIME_TYPE);
+        }
+        return $this->determineFileTypeByHeader();
+    }
+
+    /**
+     * In case ext-fileinfo is not present only the relevant types
+     * 'application/x-gzip' and 'application/x-bzip2' are resolved.
+     *
+     * @return string
+     */
+    private function determineFileTypeByHeader(): string
+    {
+        $resource = fopen($this->fileName, 'r');
+        if (!is_resource($resource)) {
+            throw new ReaderException(
+                sprintf('Resource %s could not be opened', $this->fileName),
+                1557753055
+            );
+        }
+        $header = fgets($resource, 4);
+        fclose($resource);
+        $mimeType = '';
+        if (strpos($header, "\x42\x5a\x68") === 0) {
+            $mimeType = 'application/x-bzip2';
+        } elseif (strpos($header, "\x1f\x8b") === 0) {
+            $mimeType = 'application/x-gzip';
+        }
+        return $mimeType;
     }
 
     /**
      * @param string $content
      * @return int|null
      */
-    private function resolveManifestLength($content)
+    private function resolveManifestLength(string $content)
     {
         if (strlen($content) < 4) {
             return null;
@@ -175,7 +208,7 @@ class Reader
      * @param int $start
      * @return int
      */
-    public static function resolveFourByteLittleEndian($content, $start)
+    public static function resolveFourByteLittleEndian(string $content, int $start): int
     {
         $payload = substr($content, $start, 4);
         if (!is_string($payload)) {
@@ -200,7 +233,7 @@ class Reader
      * @param int $start
      * @return int
      */
-    public static function resolveTwoByteBigEndian($content, $start)
+    public static function resolveTwoByteBigEndian(string $content, int $start): int
     {
         $payload = substr($content, $start, 2);
         if (!is_string($payload)) {

@@ -17,13 +17,10 @@
 {%
   set classes = [
     'nav-item',
-    is_active ? 'is-active'
-  ]
-%}
-{%
-  set link_classes = [
     'nav-link',
+    'p-0',
     is_active ? 'active'
   ]
 %}
+
 <li{{ attributes.addClass(classes) }}>{{ link }}</li>
